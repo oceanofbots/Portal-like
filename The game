@@ -1,0 +1,99 @@
+ew chat
+New chat
+Agents
+Spaces
+Spark
+Preview
+oceanofbots
+Copilot Free
+Copilot Chat
+New chat
+You said: import { useState, useEffect } from 'react'; import
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+
+// Simple Portal 2-inspired prototype: Atlas + Wheatley (2D side view)
+export default function Game() {
+  const [player, setPlayer] = useState({ x: 100, y: 300 });
+  const [portalA, setPortalA] = useState(null);
+  const [portalB, setPortalB] = useState(null);
+  const [message, setMessage] = useState('Wheatley: Ah, brilliant! Another test chamber.');
+  const gravity = 5;
+
+  // Movement keys
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      setPlayer((p) => {
+        let newP = { ...p };
+        if (e.key === 'ArrowRight') newP.x += 10;
+        if (e.key === 'ArrowLeft') newP.x -= 10;
+        if (e.key === ' ') newP.y -= 60; // jump
+        return newP;
+      });
+
+      if (e.key === 'q') setPortalA({ x: player.x, y: player.y });
+      if (e.key === 'e') setPortalB({ x: player.x, y: player.y });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [player]);
+
+  // Gravity simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlayer((p) => (p.y < 300 ? { ...p, y: p.y + gravity } : p));
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Portal teleportation logic
+  useEffect(() => {
+    if (portalA && portalB) {
+      const distA = Math.hypot(player.x - portalA.x, player.y - portalA.y);
+      if (distA < 20) setPlayer(portalB);
+      const distB = Math.hypot(player.x - portalB.x, player.y - portalB.y);
+      if (distB < 20) setPlayer(portalA);
+    }
+  }, [player, portalA, portalB]);
+
+  return (
+    <div className="w-full h-screen bg-gray-900 flex flex-col items-center justify-center overflow-hidden">
+      <h1 className="text-white text-xl mb-2 font-bold">Portal: Atlas Protocol</h1>
+      <p className="text-blue-300 mb-4">{message}</p>
+      <div className="relative bg-gray-800 w-[800px] h-[400px] border border-gray-700 rounded-lg overflow-hidden">
+        {/* Ground */}
+        <div className="absolute bottom-0 left-0 w-full h-10 bg-gray-700" />
+
+        {/* Player (Atlas) */}
+        <motion.div
+          animate={{ x: player.x, y: player.y }}
+          transition={{ type: 'spring', stiffness: 100 }}
+          className="absolute w-10 h-10 bg-blue-400 rounded-full border-2 border-white"
+        />
+
+        {/* Portals */}
+        {portalA && (
+          <div
+            className="absolute w-5 h-30 bg-orange-500 rounded-full"
+            style={{ left: portalA.x, top: portalA.y }}
+          />
+        )}
+        {portalB && (
+          <div
+            className="absolute w-5 h-30 bg-cyan-400 rounded-full"
+            style={{ left: portalB.x, top: portalB.y }}
+          />
+        )}
+      </div>
+
+      <div className="flex gap-3 mt-4">
+        <Button onClick={() => setMessage('Wheatley: Uh... you didn\'t fall in the goo, did you?')}>Talk</Button>
+        <Button onClick={() => setPlayer({ x: 100, y: 300 })}>Reset</Button>
+      </div>
+
+      <p className="text-gray-400 mt-2 text-sm">Use ← → to move, space to jump, Q/E to place portals.</p>
+    </div>
+  );
+}
